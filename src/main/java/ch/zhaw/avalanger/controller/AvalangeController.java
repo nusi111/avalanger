@@ -1,5 +1,10 @@
 package ch.zhaw.avalanger.controller;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,24 +14,45 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ch.zhaw.avalanger.model.Avalange;
+import ch.zhaw.avalanger.model.AvalangeCreateDTO;
+import ch.zhaw.avalanger.model.AvalangeState;
+import ch.zhaw.avalanger.repository.AvalangeRepository;
 
 @RestController
 @RequestMapping("/api/avalange")
 public class AvalangeController {
 
-    @GetMapping("/{country}")
-    public String getAllAvalanges(@PathVariable(required = false) String country,
-            @RequestParam(required = false) String state) {
+    @Autowired
+    private AvalangeRepository avalangeRepository;
+
+    @GetMapping(value = { "", "/{country}" })
+    public ResponseEntity<List<Avalange>> getAllAvalanges(@PathVariable(required = false) String country,
+            @RequestParam(required = false) AvalangeState state) {
+        // Handle all combinations of country and state filters
         if (country == null || country.isEmpty()) {
-            return "No avalanges found";
+            if (state == null) {
+                List<Avalange> avalanges = avalangeRepository.findAll();
+                return ResponseEntity.ok(avalanges);
+            } else {
+                List<Avalange> avalanges = avalangeRepository.findByState(state);
+                return ResponseEntity.ok(avalanges);
+            }
+        } else {
+            if (state == null) {
+                List<Avalange> avalanges = avalangeRepository.findByCountry(country);
+                return ResponseEntity.ok(avalanges);
+            } else {
+                List<Avalange> avalanges = avalangeRepository.findByCountryAndState(country, state);
+                return ResponseEntity.ok(avalanges);
+            }
         }
-        return "No avalanges found for country: " + country + ", state: " + state;
     }
 
     @PostMapping("")
-    public String postMethodName(@RequestBody Avalange avalange) {
+    public ResponseEntity<Avalange> postMethodName(@RequestBody AvalangeCreateDTO avalangeDTO) {
+        Avalange avalange = new Avalange(avalangeDTO.getCountry(), avalangeDTO.getDescription());
+        Avalange savedAvalange = avalangeRepository.save(avalange);
 
-        return "Avalange received: " + avalange.getCountry() + ", " + avalange.getState() + ", "
-                + avalange.getDescription();
+        return ResponseEntity.status(201).body(savedAvalange);
     }
 }
