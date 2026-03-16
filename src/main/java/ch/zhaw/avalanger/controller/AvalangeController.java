@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.avalanger.model.Avalange;
 import ch.zhaw.avalanger.model.AvalangeCreateDTO;
 import ch.zhaw.avalanger.model.AvalangeState;
+import ch.zhaw.avalanger.model.AvalangeStateAggregation;
 import ch.zhaw.avalanger.repository.AvalangeRepository;
 
 @RestController
@@ -55,4 +56,10 @@ public class AvalangeController {
 
         return ResponseEntity.status(201).body(savedAvalange);
     }
+
+    @GetMapping("/aggregations/state")
+    public List<AvalangeStateAggregation> getAvalangeStateAggregations() {
+        return avalangeRepository.countAvalangesByState();
+    }
+    
 }
